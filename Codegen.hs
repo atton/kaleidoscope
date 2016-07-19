@@ -168,8 +168,45 @@ instr ins = do
         modifyBlock $ blk {stack = i ++ [ref := ins]}
         return $ local ref
 
-terminators :: Named Terminator -> Codegen (Named Terminator)
-terminators trm = do
+terminator :: Named Terminator -> Codegen (Named Terminator)
+terminator trm = do
         blk <- current
         modifyBlock $ blk {term = Just trm}
         return trm
+
+fadd :: Operand -> Operand -> Codegen Operand
+fadd a b = instr $ FAdd NoFastMathFlags a b []
+
+fsub :: Operand -> Operand -> Codegen Operand
+fsub a b = instr $ FSub NoFastMathFlags a b []
+
+fmul :: Operand -> Operand -> Codegen Operand
+fmul a b = instr $ FMul NoFastMathFlags a b []
+
+fdiv :: Operand -> Operand -> Codegen Operand
+fdiv a b = instr $ FDiv NoFastMathFlags a b []
+
+toArgs :: [Operand] -> [(Operand, [A.ParameterAttribute])]
+toArgs = map (\x -> (x, []))
+
+br :: Name -> Codegen (Named Terminator)
+br val = terminator $ Do $ Br val []
+
+cbr :: Operand -> Name -> Name -> Codegen (Named Terminator)
+cbr cond tr fl = terminator $ Do $ CondBr cond tr fl []
+
+ret :: Operand -> Codegen (Named Terminator)
+ret val = terminator $ Do $ Ret (Just val) []
+
+
+call :: Operand -> [Operand] -> Codegen Operand
+call fn args = instr $ Call Nothing CC.C [] (Right fn) (toArgs args) [] []
+
+alloca :: Type -> Codegen Operand
+alloca ty = instr $ Alloca ty Nothing 0 []
+
+store :: Operand -> Operand -> Codegen Operand
+store ptr val = instr $ Store False ptr val Nothing 0 []
+
+load :: Operand -> Codegen Operand
+load ptr = instr $ Load False ptr Nothing 0 []
