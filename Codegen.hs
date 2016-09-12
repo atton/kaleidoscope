@@ -40,7 +40,7 @@ instance IsString Name where
     fromString = Name . fromString
 
 data CodegenState =
-     CodeGenState {
+     CodegenState {
         currentBlock :: Name                     -- Name of the active block to append to
       , blocks       :: Map.Map Name BlockState  -- blocks for function
       , symtab       :: SymbolTable              -- Function scope symbolTable
@@ -59,6 +59,12 @@ data BlockState =
 
 newtype Codegen a = Codegen { runCodegen :: State CodegenState a}
                         deriving (Functor, Applicative, Monad, MonadState CodegenState)
+
+execCodegen :: Codegen a -> CodegenState
+execCodegen m = execState (runCodegen m) emptyCodegen
+
+emptyCodegen :: CodegenState
+emptyCodegen = CodegenState (Name entryBlockname) Map.empty [] 1 0 Map.empty
 
 newtype LLVM a = LLVM { unLLVM :: State AST.Module a}
                         deriving (Functor, Applicative, Monad, MonadState AST.Module)
@@ -91,6 +97,9 @@ external retType label argTypes = addDefn $
     , returnType  = retType
     , basicBlocks = []
     }
+
+entryBlockname :: String
+entryBlockname = "entry"
 
 entry :: Codegen Name
 entry = gets currentBlock
@@ -126,6 +135,18 @@ modifyBlock :: BlockState -> Codegen ()
 modifyBlock new = do
         active <- gets currentBlock
         modify $ \s -> s { blocks = Map.insert active new (blocks s)}
+
+createBlocks :: CodegenState -> [BasicBlock]
+createBlocks m = map makeBlock $ sortBlocks $ Map.toList (blocks m)
+
+makeBlock :: (Name, BlockState) -> BasicBlock
+makeBlock (l, (BlockState _ s t)) = BasicBlock  l s (maketerm t)
+    where
+        maketerm (Just x) = x
+        maketerm _        = error $ "block has no terminator" ++ show l
+
+sortBlocks :: [(Name, BlockState)] -> [(Name, BlockState)]
+sortBlocks = sortBy (compare `on` (idx . snd))
 
 current :: Codegen BlockState
 current = do
@@ -185,6 +206,9 @@ fmul a b = instr $ FMul NoFastMathFlags a b []
 
 fdiv :: Operand -> Operand -> Codegen Operand
 fdiv a b = instr $ FDiv NoFastMathFlags a b []
+
+cons :: C.Constant -> Operand
+cons = ConstantOperand
 
 toArgs :: [Operand] -> [(Operand, [A.ParameterAttribute])]
 toArgs = map (\x -> (x, []))
