@@ -207,8 +207,14 @@ fmul a b = instr $ FMul NoFastMathFlags a b []
 fdiv :: Operand -> Operand -> Codegen Operand
 fdiv a b = instr $ FDiv NoFastMathFlags a b []
 
+fcmp :: FP.FloatingPointPredicate -> Operand -> Operand -> Codegen Operand
+fcmp cond a b = instr $ FCmp cond a b []
+
 cons :: C.Constant -> Operand
 cons = ConstantOperand
+
+uitofp :: Type -> Operand -> Codegen Operand
+uitofp ty a = instr $ UIToFP a ty []
 
 toArgs :: [Operand] -> [(Operand, [A.ParameterAttribute])]
 toArgs = map (\x -> (x, []))

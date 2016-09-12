@@ -9,12 +9,12 @@ import qualified Text.Parsec.Token as Tok
 import Lexer
 import Syntax
 
-binary s f assoc = Ex.Infix (reservedOp s >> return (BinOp f)) assoc
+binary s assoc = Ex.Infix (reservedOp s >> return (BinaryOp s)) assoc
 
-table = [[ binary "*" Times  Ex.AssocLeft
-         , binary "/" Devide Ex.AssocLeft]
-        ,[ binary "+" Plus   Ex.AssocLeft
-         , binary "-" Minux  Ex.AssocLeft]
+table = [[ binary "*" Ex.AssocLeft
+         , binary "/" Ex.AssocLeft]
+        ,[ binary "+" Ex.AssocLeft
+         , binary "-" Ex.AssocLeft]
         ]
 
 int :: Parser Expr
