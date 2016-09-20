@@ -12,6 +12,7 @@ A toy language using LLVM + Haskell.
 * $ ./Main
 * $ 100;
 * $ def hoge(a) a+2-a+34;
+* & hoge(22);
 
 
 
