@@ -41,11 +41,11 @@ codegenTop (S.Function name args body) = do
                 assign a var
             cgen body >>= ret
 
-codeGenTop (S.Extern name args) = do
+codegenTop (S.Extern name args) = do
         external double name fnargs
         where fnargs = toSig args
 
-codeGenTop exp = do
+codegenTop exp = do
         define double "main" [] blks
         where
             blks = createBlocks $ execCodegen $ do
