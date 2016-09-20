@@ -8,7 +8,7 @@ A toy language using LLVM + Haskell.
 * $ docker build -t kaleidoscope .
 * $ docker run -it kaleidoscope
 
-* $ ghc Main.hs
+* $ stack ghc Main.hs
 * $ ./Main
 * $ 100;
 * $ def hoge(a) a+2-a+34;
